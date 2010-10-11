@@ -1,0 +1,25 @@
+{% extends "form.html" %}
+{% block form_tag %}
+<!-- {{ request.session.user.lastname }} !--> 
+<form action="/users/login/" method="post">
+{% endblock form_tag %}
+{% block form_fields %}
+    <div class="fieldWrapper">
+        {{ form.email.errors }}
+        <label for="id_email">Email:</label>
+        {{ form.email }}
+    </div>
+    <div class="fieldWrapper">
+        {{ form.password.errors }}
+        <label for="id_password">Password:</label>
+        {{ form.password }}
+    </div>
+	<div class="fieldWrapper">
+        <label for="id_remember_me">Remember me:</label>
+        {{ form.remember_me }}
+    </div>
+{% endblock form_fields %}
+{% block form_submit_tag %}
+	<input type="submit" value="Login" />
+{% endblock form_submit_tag %}
+

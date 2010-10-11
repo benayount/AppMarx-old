@@ -1,0 +1,18 @@
+{% extends "form.html" %}
+
+{% block form_tag %}
+<form action="/websites/tryit/" method="post">
+{% endblock form_tag %}
+
+{% block form_fields %}
+<div class="fieldWrapper">
+    {{ form.URL.errors }}
+    <label for="id_URL">URL:</label>
+    {{ form.URL }}
+</div>
+{% endblock form_fields %}
+
+{% block form_submit_tag %}
+<input type="submit" value="Try It!" />
+{% endblock form_submit_tag %}
+	

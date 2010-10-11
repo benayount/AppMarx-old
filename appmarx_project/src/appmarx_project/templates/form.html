@@ -1,0 +1,14 @@
+{% if form.non_field_errors %}<p>{{ form.non_field_errors }}</p>{% endif %}
+{% if error_message %}<p>{{ error_message }}</p>{% endif %}
+
+
+{% block form_tag %}
+{% endblock form_tag %}
+	{% csrf_token %}
+	{% block form_fields %}
+	{% endblock form_fields %}
+    <p>
+    {% block form_submit_tag %}
+	{% endblock form_submit_tag %}
+	</p>
+</form>
