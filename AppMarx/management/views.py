@@ -12,7 +12,6 @@ from models import User, User_Activation, User_Website, \
 from forms import LoginForm, ChangePasswordForm, \
  SignupForm, TryitForm, ForgetPasswordForm
 
-from helpers import safe_dict_get
 import sys
 from lib import remove_landing_url,  \
  get_http_response, get_site_description, \
