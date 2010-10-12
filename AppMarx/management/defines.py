@@ -1,0 +1,3 @@
+APPMARX_ACCOUNTS_EMAIL = 'accounts@appmarx.com'
+EMAIL_ACTIVATION_SUBJECT = 'Welcome to AppMarx'
+CHANGE_PASSWORD = 2

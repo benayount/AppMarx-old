@@ -1,0 +1,20 @@
+{% extends "base_html.html" %}
+
+{% block head %}
+{% endblock head %}
+
+{% block content %}
+    
+	<a href='http://siteanalytics.compete.com/{{ clean_URL }}/?metric=uv'>
+		<img src='http://grapher.compete.com/{{ clean_URL }}_uv_310.png' style="border:0px"/>
+	</a>
+	<br />
+	{{ name|striptags }}: 
+	{{ description|striptags }}
+	<br />
+	<img src='{{ favicon_url }}' />
+	<br />
+	<br />
+	<img style="width:304px;height:195px" src='http://localhost:8000/management/thumb/{{ URL }}' />
+	
+{% endblock content %}
