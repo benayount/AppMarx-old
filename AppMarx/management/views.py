@@ -84,12 +84,12 @@ def forget_password(request):
             return HttpResponse(form._errors['email'])
     
     # for testing
-    """
+    
     else:
         form = ForgetPasswordForm()
         
     return render_form('forgetpassword_form.html', form, '', request)
-    """
+    
     # end testing
     raise Http404
 
@@ -100,21 +100,21 @@ def change_password(request, token):
     except User_ForgetPassword.DoesNotExist:
         raise Http404
     
+    response = HttpResponseRedirect('/')
+    
+    import datetime
+    now = datetime.datetime.now()
+    delta = datetime.timedelta(seconds=2*60*60*24)
+    expires = ufp.created_at + delta
+    if now > expires:
+        ufp.delete()
+        return response
+    
     if request.method == 'POST':
         form = ChangePasswordForm(request.POST)
         if form.is_valid():
             password = form.cleaned_data['password']
-            response = HttpResponseRedirect('/')
-            
             user = ufp.user
-            
-            import datetime
-            now = datetime.datetime.now()
-            delta = datetime.timedelta(seconds=2*60*60*24)
-            expires = ufp.created_at + delta
-            if now > expires:
-                ufp.delete()
-                return response
             
             ufp.delete()
             
@@ -146,7 +146,7 @@ def signup(request):
             email = form.cleaned_data['email']
             fullname = form.cleaned_data['fullname']
             password = form.cleaned_data['password']
-            URL = remove_landing_url(str(form.cleaned_data['URL']).lower())
+            URL = str(form.cleaned_data['URL']).lower()
             # creating the fresh user
             user = User(fullname=fullname, email=email, password=password, type=1)
             user.save()
@@ -155,7 +155,12 @@ def signup(request):
             # insert the url to websites table in an unverified state 
             # associated to the fresh user -- custom validator made sure that no
             # record with same url is verified yet
-            website = Website(URL=URL, name=extract_website_name(URL), type=1)
+            
+            description =''
+            res = get_http_response(URL)
+            if res:
+                description=get_site_description(res)
+            website = Website(URL=URL, name=extract_website_name(URL), description=description, type=1)
             website.save()
             # the actual user-website association creation
             User_Website(user=user,website=website).save()
@@ -224,7 +229,7 @@ def tryit(request):
         form = TryitForm(request.POST)
         if form.is_valid():
             # "normalize" the url
-            URL = remove_landing_url(str(form.cleaned_data['URL']).lower())
+            URL = str(form.cleaned_data['URL']).lower()
             # test for site existence
             #return HttpResponse(URL)
             res = get_http_response(URL)
@@ -236,24 +241,26 @@ def tryit(request):
                 
                 # site description
                 website_info = {}
-                
-                # also pass the website's(company) name
-                website_info['name'] = extract_website_name(URL)
-                
                 website_info['URL'] = URL
                 
+                # for favicon
+
+                nolanding_url = remove_landing_url(URL)
+                
                 # clean url for compete
-                website_info['clean_URL'] = remove_leading_http(URL)
+                website_info['compete_URL'] = remove_leading_http(nolanding_url)
+               
+                website_info['name'] = extract_website_name(nolanding_url)
                 
                 # get available description of website
                 website_info['description'] = \
                  get_site_description(res)
                 
                 # get the website's icon
-                website_info['favicon_url'] = get_site_favicon_img_tag(URL)
+                website_info['favicon_url'] = get_site_favicon_img_tag(nolanding_url)
                 
-
-                #website_info['screenshot_img_src'] = capty(URL)
+                # for screenshot
+                website_info['thumb_URL'] = nolanding_url
                 
                 return render_to_response('website_info.html',
                     website_info,

@@ -111,6 +111,7 @@ class User_Activation(models.Model):
 
 class Website(models.Model):
     name = models.CharField(max_length=255)
+    description = models.CharField(max_length=511,blank=True)
     URL = models.URLField(max_length=511)
     type = models.IntegerField()
     api_key = models.CharField(max_length=60,blank=True,unique=True)
@@ -184,3 +185,8 @@ class Website_Website(models.Model):
     from_website = models.ForeignKey(Website, related_name='from')
     to_website = models.ForeignKey(Website, related_name='to')
     created_at = models.DateTimeField(auto_now_add=True)
+    
+from djangotoolbox.fields import BlobField
+
+class Test(models.Model):
+    a = BlobField(blank=True)

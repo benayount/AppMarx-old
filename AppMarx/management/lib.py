@@ -466,7 +466,7 @@ def session_maintenance(request):
     return request
 
 # protected views decorator
-
+# will redirect to root if not logged in
 def protected(view):
     def wrapper(request, *args, **kwargs):
         request = session_maintenance(request)
@@ -476,7 +476,7 @@ def protected(view):
     return wrapper
 
 # public views decorator
-
+# will redirect to /management if logged in
 def public(view):
     def wrapper(request, *args, **kwargs):
         request = session_maintenance(request)

@@ -76,8 +76,10 @@ class Capturer(object):
         img.save(self.filename)
         QtCore.QCoreApplication.instance().quit()
 
-def take_screenshot(url, img_path):
-    app = QtGui.QApplication(['capty.py', url, img_path])
-    c = Capturer(url, img_path)
+if __name__ == "__main__":
+    """Run a simple capture"""
+    app = QtGui.QApplication(sys.argv)
+    c = Capturer(sys.argv[1], sys.argv[2])
     c.capture()
     app.exec_()
+
