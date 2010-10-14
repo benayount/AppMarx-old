@@ -9,13 +9,12 @@ from django.conf import settings
 from defines import *
 from django.core.exceptions import *
 from models import User, User_AutoLogin
-from django.conf import settings
 
 from django.template import RequestContext
 from django.shortcuts import render_to_response
 import urllib2
 from urllib2 import URLError, HTTPError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 
 from helpers import safe_dict_get, make_random_string
 # check if a user logged in
