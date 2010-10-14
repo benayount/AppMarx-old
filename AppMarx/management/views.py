@@ -179,12 +179,13 @@ def signup(request):
             if favicon_url:
                 favicon_content = http_read(favicon_url) or ''
                 if favicon_content:
+                    filename = make_random_string(32)
                     favicon32 = ContentFile(normalize_img((32,32),favicon_content))
                     favicon48 = ContentFile(normalize_img((48,48),favicon_content))
                     favicon64 = ContentFile(normalize_img((64,64),favicon_content))
-                    website.favicon32.save(make_random_string(32)+'-32'+'.png', favicon32)
-                    website.favicon48.save(make_random_string(32)+'-48'+'.png', favicon48)
-                    website.favicon64.save(make_random_string(32)+'-64'+'.png', favicon64)
+                    website.favicon32.save(filename+'-32'+'.png', favicon32)
+                    website.favicon48.save(filename+'-48'+'.png', favicon48)
+                    website.favicon64.save(filename+'-64'+'.png', favicon64)
             
             # the actual user-website association creation
             User_Website(user=user,website=website).save()
