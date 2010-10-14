@@ -511,3 +511,22 @@ def normalize_img((width, height), data):
     import os
     os.remove(tmp_file_full_path)
     return tmp_file_content
+
+# capty
+
+import os
+import subprocess
+
+def screenshot(url):
+    hash = hashlib.sha1(url).hexdigest()
+    path = settings.THUMBS_DIR + hash + '.png'
+
+    if not os.path.isfile(path):
+        try:
+            subprocess.check_call([settings.CAPTY,\
+                url,\
+                path])
+        except subprocess.CalledProcessError:
+            return ''
+
+    return settings.MEDIA_URL+'screenshots/'+ hash + '.png'

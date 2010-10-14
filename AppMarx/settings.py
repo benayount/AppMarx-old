@@ -110,3 +110,6 @@ INSTALLED_APPS = (
 # custom settings
 
 FAVICON_FRAME_IMG = 'media/lib/bordered_transparent.png'
+
+CAPTY = '/home/adam/Aptana Studio Workspace/AppMarx/management/capty.py'
+THUMBS_DIR  = '/home/adam/Aptana Studio Workspace/AppMarx/media/screenshots/'

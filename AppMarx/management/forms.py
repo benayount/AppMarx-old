@@ -3,8 +3,8 @@ from lib import authenticate_user
 from models import User, Website
 
 class ChangePasswordForm(forms.Form):
-    password = forms.CharField(widget=forms.PasswordInput(render_value=False), max_length=40)
-    password_confirmation = forms.CharField(widget=forms.PasswordInput(render_value=False), max_length=40)
+    password = forms.CharField(widget=forms.PasswordInput(render_value=False), max_length=40, min_length=4)
+    password_confirmation = forms.CharField(widget=forms.PasswordInput(render_value=False), max_length=40, min_length=4)
     
     def clean(self):
         cleaned_data = self.cleaned_data
@@ -46,7 +46,7 @@ class LoginForm(forms.Form):
 class SignupForm(forms.Form):
     fullname = forms.CharField(max_length=64)
     email = forms.EmailField()
-    password = forms.CharField(widget=forms.PasswordInput(render_value=False), max_length=40)
+    password = forms.CharField(widget=forms.PasswordInput(render_value=False), max_length=40, min_length=4)
     URL = forms.URLField(max_length=511)
     
     def clean(self):

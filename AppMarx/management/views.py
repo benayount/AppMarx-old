@@ -19,7 +19,7 @@ from lib import remove_landing_url,  \
  get_site_favicon_url, extract_website_name, \
  remember_user, forget_user, login_user, \
  render_form, is_logged_in, protected, public, logout_user, \
- remove_leading_http, http_read, normalize_img
+ remove_leading_http, http_read, normalize_img, screenshot
  
 from django.core.files.base import ContentFile
 from helpers import make_random_string
@@ -218,35 +218,6 @@ def activate(request, activation_code):
     login_user(session=request.session, user=user)
     return response
 
-
-# capty
-
-import os
-import subprocess
-import hashlib
-
-CAPTY = '/home/adam/Aptana Studio Workspace/AppMarx/management/capty.py'
-THUMBS_DIR  = '/home/adam/Aptana Studio Workspace/AppMarx/media/screenshots/'
-
-# screen shot service
-
-#put them in db
-
-def thumb(request, url):
-    hash = hashlib.sha1(url).hexdigest()
-    path = THUMBS_DIR + hash + '.png'
-
-    if not os.path.isfile(path):
-        try:
-            subprocess.check_call([CAPTY,\
-                url,\
-                path])
-        except subprocess.CalledProcessError:
-            return HttpResponse('')
-
-    img = open(path, 'rb').read()
-    return HttpResponse(img, mimetype='image/png')
-
 @public
 def tryit(request):
     error_message = ''
@@ -280,10 +251,10 @@ def tryit(request):
                 website_info['description'] = get_site_description(res)
                 
                 # get the website's icon
-                website_info['favicon_url'] = get_site_favicon_url(nolanding_url)
+                website_info['favicon_URL'] = get_site_favicon_url(nolanding_url)
                 
                 # for screenshot
-                website_info['thumb_URL'] = nolanding_url
+                website_info['screenshot_URL'] = screenshot(URL)
                 
                 return render_to_response('website_info.html',
                     website_info,
