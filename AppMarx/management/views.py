@@ -13,12 +13,16 @@ from forms import LoginForm, ChangePasswordForm, \
  SignupForm, TryitForm, ForgetPasswordForm
 
 import sys
+import re
 from lib import remove_landing_url,  \
  get_http_response, get_site_description, \
- get_site_favicon_img_tag, extract_website_name, \
+ get_site_favicon_url, extract_website_name, \
  remember_user, forget_user, login_user, \
  render_form, is_logged_in, protected, public, logout_user, \
- remove_leading_http
+ remove_leading_http, http_read, normalize_img
+ 
+from django.core.files.base import ContentFile
+from helpers import make_random_string
   
 #TODO: implement forget password, and send activation code again
 #TODO: implement search
@@ -152,16 +156,36 @@ def signup(request):
             user.save()
             # creating activation record for the fresh user
             User_Activation(user=user).save()
-            # insert the url to websites table in an unverified state 
-            # associated to the fresh user -- custom validator made sure that no
-            # record with same url is verified yet
             
             description =''
             res = get_http_response(URL)
+            
+            # saving website's description
             if res:
-                description=get_site_description(res)
-            website = Website(URL=URL, name=extract_website_name(URL), description=description, type=1)
+                description=get_site_description(res)[0:510]
+                if len(description) >= 507:
+                    description=description[0:507]+'...'
+                    
+            name=extract_website_name(remove_landing_url(URL))
+            
+            # insert the url to websites table in an unverified state 
+            # associated to the fresh user -- custom validator made sure that no
+            # record with same url is verified yet
+            website = Website(URL=URL, name=name, description=description, type=1)
             website.save()
+            
+            # saving website's icon
+            favicon_url = get_site_favicon_url(remove_landing_url(URL)) or ''
+            if favicon_url:
+                favicon_content = http_read(favicon_url) or ''
+                if favicon_content:
+                    favicon32 = ContentFile(normalize_img((32,32),favicon_content))
+                    favicon48 = ContentFile(normalize_img((48,48),favicon_content))
+                    favicon64 = ContentFile(normalize_img((64,64),favicon_content))
+                    website.favicon32.save(make_random_string(32)+'-32'+'.png', favicon32)
+                    website.favicon48.save(make_random_string(32)+'-48'+'.png', favicon48)
+                    website.favicon64.save(make_random_string(32)+'-64'+'.png', favicon64)
+            
             # the actual user-website association creation
             User_Website(user=user,website=website).save()
             response = HttpResponse('Signup successful, please activate via email')
@@ -198,17 +222,17 @@ def activate(request, activation_code):
 
 import os
 import subprocess
-import md5
+import hashlib
 
 CAPTY = '/home/adam/Aptana Studio Workspace/AppMarx/management/capty.py'
-THUMBS_DIR  = '/home/adam/Aptana Studio Workspace/AppMarx/management/images/'
+THUMBS_DIR  = '/home/adam/Aptana Studio Workspace/AppMarx/media/screenshots/'
 
 # screen shot service
 
 #put them in db
 
 def thumb(request, url):
-    hash = md5.new(url).hexdigest()
+    hash = hashlib.sha1(url).hexdigest()
     path = THUMBS_DIR + hash + '.png'
 
     if not os.path.isfile(path):
@@ -231,7 +255,6 @@ def tryit(request):
             # "normalize" the url
             URL = str(form.cleaned_data['URL']).lower()
             # test for site existence
-            #return HttpResponse(URL)
             res = get_http_response(URL)
             if not res:
                 error_message += "We can not connect '" \
@@ -244,20 +267,19 @@ def tryit(request):
                 website_info['URL'] = URL
                 
                 # for favicon
-
                 nolanding_url = remove_landing_url(URL)
                 
                 # clean url for compete
                 website_info['compete_URL'] = remove_leading_http(nolanding_url)
                
+                # website's name
                 website_info['name'] = extract_website_name(nolanding_url)
                 
                 # get available description of website
-                website_info['description'] = \
-                 get_site_description(res)
+                website_info['description'] = get_site_description(res)
                 
                 # get the website's icon
-                website_info['favicon_url'] = get_site_favicon_img_tag(nolanding_url)
+                website_info['favicon_url'] = get_site_favicon_url(nolanding_url)
                 
                 # for screenshot
                 website_info['thumb_URL'] = nolanding_url
@@ -274,7 +296,6 @@ def tryit(request):
 
 @protected
 def recommend(request, from_id, to_id):
-    if is_logged_in(request):
         user_id = request.session['user_id']
         # really a server error..
         try:
@@ -282,8 +303,8 @@ def recommend(request, from_id, to_id):
         except User.DoesNotExist:
             raise Http404
         try:
-            from_website = Website.objects.get(id=from_id)
-            to_website = Website.objects.get(id=to_id)
+            from_website = Website.objects.get(id=from_id, is_verified=True)
+            to_website = Website.objects.get(id=to_id, is_verified=True)
         except Website.DoesNotExist:
             raise Http404
         # make sure our user is associated with the from website

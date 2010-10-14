@@ -10,5 +10,4 @@ urlpatterns = patterns('management.views',
     (r'^recommend/(?P<from_id>\d+)/(?P<to_id>\d+)$', 'recommend'),
     (r'^thumb/(?P<url>.*)', 'thumb'),
     (r'^change_password/(?P<token>[a-zA-Z0-9]{32})/$', 'change_password'),
-
 )

@@ -51,17 +51,17 @@ USE_L10N = True
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = ''
+MEDIA_ROOT = '/home/adam/Aptana Studio Workspace/AppMarx/media/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
-MEDIA_URL = ''
+MEDIA_URL = 'http://localhost:8000/media/'
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
 # Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = '/media/'
+ADMIN_MEDIA_PREFIX = '/admin/media/'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '76=i*&o-o*s$lt*qz=t1qzyk^c4ovxl9)0!t&!jo(9vqp@7x1u'
@@ -106,3 +106,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'AppMarx.management',
 )
+
+# custom settings
+
+FAVICON_FRAME_IMG = 'media/lib/bordered_transparent.png'

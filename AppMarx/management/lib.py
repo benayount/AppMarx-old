@@ -4,7 +4,9 @@ import libxml2dom
 import datetime
 import hashlib
 import sys
+from django.conf import settings
 
+from defines import *
 from django.core.exceptions import *
 from models import User, User_AutoLogin
 from django.conf import settings
@@ -15,7 +17,7 @@ import urllib2
 from urllib2 import URLError, HTTPError
 from django.http import HttpResponse, HttpResponseRedirect
 
-from helpers import safe_dict_get
+from helpers import safe_dict_get, make_random_string
 # check if a user logged in
 
 def is_logged_in(request):
@@ -39,9 +41,6 @@ def remove_landing_url(url):
         url = re.sub('^http[s]?:\/\/', '', url)
     url = re.sub('\/.*', '', url)
     return prefix+url
-
-def clean_url(url):
-    return remove_landing_url(remove_leading_http(url))
 
 def get_site_description(res):
     doc = libxml2dom.parseString(res.read(), html=1)
@@ -337,9 +336,7 @@ def extract_website_name(url):
             return url[(p.start()+1):p.end()+1]
     return ''
 
-    
-    
-def get_site_favicon_img_tag(url):
+def get_site_favicon_url(url):
     # twitter trial for favicon
     default_images_sizes = [2483, 1073, 1233, 1381]
     website_name = extract_website_name(url)
@@ -359,6 +356,8 @@ def get_site_favicon_img_tag(url):
     res = get_http_response(image_url)
     if res is not None:
         return image_url
+    
+    return None
 
 def authenticate_user(email, password):
     try:
@@ -426,7 +425,7 @@ def get_http_response(url):
     try:
         res = urllib2.urlopen(req)
     except (URLError, HTTPError):
-        return False
+        return None
     return res
      
 def autologin(request):
@@ -462,7 +461,6 @@ def autologin(request):
 
 def session_maintenance(request):
     request = autologin(request)
-    # request.session['last_visited'] = request.path
     return request
 
 # protected views decorator
@@ -484,3 +482,32 @@ def public(view):
             return HttpResponseRedirect('/management')
         return view(request, *args, **kwargs)
     return wrapper
+
+def http_read(url):
+    res = get_http_response(url)
+    if res:
+        return res.read()
+    return None
+
+def normalize_img((width, height), data):
+    import ImageFile
+    import Image
+    p = ImageFile.Parser()
+    p.feed(data)
+    im=p.close()
+    # small images processing(framing etc..)
+    if im.size[0]<=24 and im.size[1]<=24:
+        # normalize the small image
+        im = im.resize((16,16), Image.ANTIALIAS)
+        border=Image.open(settings.FAVICON_FRAME_IMG)
+        border.paste(im, (10,10))
+        im = border
+    im = im.resize((width,height), Image.ANTIALIAS)
+    tmp_filename = make_random_string(length=32)
+    tmp_file_full_path = TMP_IMAGES_FOLDER+tmp_filename+'.png'
+    im.save(tmp_file_full_path, 'png')
+    tmp_file = open(tmp_file_full_path,'r')
+    tmp_file_content = tmp_file.read()
+    import os
+    os.remove(tmp_file_full_path)
+    return tmp_file_content
