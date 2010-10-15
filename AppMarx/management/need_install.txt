@@ -1,3 +1,4 @@
 urllib
 urllib2
 libxml2dom
+ImageMagick

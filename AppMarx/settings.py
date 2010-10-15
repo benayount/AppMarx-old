@@ -112,4 +112,6 @@ INSTALLED_APPS = (
 FAVICON_FRAME_IMG = 'media/lib/bordered_transparent.png'
 
 CAPTY = '/home/adam/Aptana Studio Workspace/AppMarx/management/capty.py'
-THUMBS_DIR  = '/home/adam/Aptana Studio Workspace/AppMarx/media/screenshots/'
+SCREENSHOTS_FOLDER  = MEDIA_ROOT+'screenshots/'
+TMP_IMAGES_FOLDER = MEDIA_ROOT+'tmp/'
+IMAGES_LIB_FOLDER = MEDIA_ROOT+'lib/'

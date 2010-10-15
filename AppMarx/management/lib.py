@@ -491,23 +491,45 @@ def http_read(url):
 def normalize_img((width, height), data):
     import ImageFile
     import Image
+    import subprocess
+    import os
     p = ImageFile.Parser()
     p.feed(data)
     im=p.close()
     # small images processing(framing etc..)
-    if im.size[0]<=24 and im.size[1]<=24:
+    if im.size[0]<=22 and im.size[1]<=22:
         # normalize the small image
-        im = im.resize((16,16), Image.ANTIALIAS)
-        border=Image.open(settings.FAVICON_FRAME_IMG)
-        border.paste(im, (10,10))
-        im = border
+        #im = im.resize((16,16), Image.ANTIALIAS)
+        
+        # create our temp file names (to be removed soon)
+        tmp_filename=[]
+        for i in range(0,5):
+            tmp_filename.append(settings.TMP_IMAGES_FOLDER+make_random_string(length=32)+'.png')
+        
+        im.save(tmp_filename[0],'png')
+        
+        # using ImageMagick
+        try:
+            subprocess.call(['convert','-bordercolor', 'none', '-border', '10', '-mattecolor', 'none','-frame', '2x2',tmp_filename[0],tmp_filename[1]])
+            subprocess.call(['convert',tmp_filename[1],'-border','3','-alpha', 'transparent','-background', 'none','-fill','white','-stroke','none','-strokewidth','0','-draw','@'+settings.IMAGES_LIB_FOLDER+'rounded_corner.mvg',tmp_filename[2]])
+            subprocess.call(['convert',tmp_filename[1],'-border', '3', '-alpha','transparent','-background','none','-fill', 'none', '-stroke', '#CCC', '-strokewidth', '3', '-draw' ,'@'+settings.IMAGES_LIB_FOLDER+'rounded_corner.mvg', tmp_filename[3]])
+            subprocess.call(['convert',tmp_filename[1],'-matte','-bordercolor', 'none', '-border', '3',tmp_filename[2],'-compose', 'DstIn', '-composite',tmp_filename[3],'-compose', 'Over','-composite', tmp_filename[4]])
+        except (subprocess.CalledProcessError,OSError):
+            return ''
+        
+        im = Image.open(tmp_filename[4])
+        
+        # removal of tmp files
+        
+        for i in range(0,5):
+            os.remove(tmp_filename[i])
+        
     im = im.resize((width,height), Image.ANTIALIAS)
     tmp_filename = make_random_string(length=32)
-    tmp_file_full_path = TMP_IMAGES_FOLDER+tmp_filename+'.png'
+    tmp_file_full_path = settings.TMP_IMAGES_FOLDER+tmp_filename+'.png'
     im.save(tmp_file_full_path, 'png')
     tmp_file = open(tmp_file_full_path,'r')
     tmp_file_content = tmp_file.read()
-    import os
     os.remove(tmp_file_full_path)
     return tmp_file_content
 
@@ -518,7 +540,7 @@ import subprocess
 
 def screenshot(url):
     hash = hashlib.sha1(url).hexdigest()
-    path = settings.THUMBS_DIR + hash + '.png'
+    path = settings.SCREENSHOTS_FOLDER + hash + '.png'
 
     if not os.path.isfile(path):
         try:
