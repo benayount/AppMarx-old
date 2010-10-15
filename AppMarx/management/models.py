@@ -13,7 +13,7 @@ class User(models.Model):
     email = models.EmailField(unique=True)
     encrypted_password = models.CharField(max_length=40)
     fullname = models.CharField(max_length=64)
-    type = models.IntegerField()
+    type = models.IntegerField(default=1)
     salt = models.CharField(max_length=16, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
@@ -35,7 +35,7 @@ class User(models.Model):
 # to change their password once providing token field
 
 class User_ForgetPassword(models.Model):
-    user = models.ForeignKey(User, unique=True)
+    user = models.ForeignKey(User, unique=True,null=False,blank=False)
     token = models.CharField(max_length=32, blank=True, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -70,7 +70,7 @@ class User_ForgetPassword(models.Model):
 # User_Activation model        
 
 class User_Activation(models.Model):
-    user = models.ForeignKey(User, unique=True)
+    user = models.ForeignKey(User, unique=True,null=False,blank=False)
     activation_code = models.CharField(max_length=32, blank=True, unique=True)
     activated_at = models.DateTimeField(null=True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -116,7 +116,7 @@ class Website(models.Model):
     favicon48 = models.ImageField(upload_to='favicons/%Y/%m/%d/')
     favicon64 = models.ImageField(upload_to='favicons/%Y/%m/%d/')
     URL = models.URLField(max_length=511)
-    type = models.IntegerField()
+    type = models.IntegerField(default=1)
     api_key = models.CharField(max_length=60,blank=True,unique=True)
     is_verified = models.BooleanField(default=False)
     verified_at = models.DateTimeField(null=True,blank=True)
@@ -152,8 +152,8 @@ class Website(models.Model):
 # Website_User model, Many users to Website for now
 
 class User_Website(models.Model):
-    website = models.ForeignKey(Website)
-    user = models.ForeignKey(User)
+    website = models.ForeignKey(Website,null=False,blank=False)
+    user = models.ForeignKey(User,null=False,blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __unicode__(self):
@@ -162,7 +162,7 @@ class User_Website(models.Model):
 # User_AutoLogin
 
 class User_AutoLogin(models.Model):
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User,null=False,blank=False)
     remember_token = models.CharField(max_length=32, blank=True)
     expires_at = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -185,13 +185,17 @@ class User_AutoLogin(models.Model):
 # Website_Website Model
 
 class Website_Website(models.Model):
-    from_website = models.ForeignKey(Website, related_name='from')
-    to_website = models.ForeignKey(Website, related_name='to')
+    from_website = models.ForeignKey(Website, related_name='from',null=False,blank=False)
+    to_website = models.ForeignKey(Website, related_name='to',null=False,blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
-class Website_Images(models.Model):
-    image = models.ImageField(upload_to='favicons/%Y/%m/%d')
-    website = models.ForeignKey(Website)
+# Website_Website Model
+
+class Website_Image(models.Model):
+    image = models.ImageField(upload_to='screenshots/%Y/%m/%d')
+    name = models.CharField(max_length=511,blank=False,null=False)
+    website = models.ForeignKey(Website,null=False,blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    
     

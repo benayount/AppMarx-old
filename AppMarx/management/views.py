@@ -7,7 +7,7 @@ from django.shortcuts import render_to_response
 from django.http import Http404
  
 from models import User, User_Activation, User_Website, \
- Website, Website_Website, User_ForgetPassword
+ Website, Website_Website, User_ForgetPassword, Website_Image
 
 from forms import LoginForm, ChangePasswordForm, \
  SignupForm, TryitForm, ForgetPasswordForm
@@ -20,7 +20,8 @@ from lib import remove_landing_url,  \
  get_site_favicon_url, extract_website_name, \
  remember_user, forget_user, login_user, \
  render_form, is_logged_in, protected, public, logout_user, \
- remove_leading_http, http_read, normalize_img, screenshot
+ remove_leading_http, http_read, normalize_img, tryit_screenshot, \
+ site_screenshot
  
 from django.core.files.base import ContentFile
 from helpers import make_random_string
@@ -188,6 +189,11 @@ def signup(request):
                     website.favicon48.save(filename+'-48'+'.png', favicon48)
                     website.favicon64.save(filename+'-64'+'.png', favicon64)
             
+            # first site screenshot insertion
+            screenshot_name = make_random_string(32)+'.png'
+            screenshot_image_content = ContentFile(normalize_img((400,300),site_screenshot(URL))) or ''
+            wi = Website_Image(name=name, website=website)
+            wi.image.save(screenshot_name, screenshot_image_content)
             # the actual user-website association creation
             User_Website(user=user,website=website).save()
             response = HttpResponse('Signup successful, please activate via email')
@@ -255,7 +261,7 @@ def tryit(request):
                 website_info['favicon_URL'] = get_site_favicon_url(nolanding_url)
                 
                 # for screenshot
-                website_info['screenshot_URL'] = screenshot(URL)
+                website_info['screenshot_URL'] = tryit_screenshot(URL) or ''
                 
                 return render_to_response('website_info.html',
                     website_info,

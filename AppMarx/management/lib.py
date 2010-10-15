@@ -4,6 +4,9 @@ import libxml2dom
 import datetime
 import hashlib
 import sys
+import os
+import subprocess
+
 from django.conf import settings
 
 from defines import *
@@ -337,7 +340,7 @@ def extract_website_name(url):
 
 def get_site_favicon_url(url):
     # twitter trial for favicon
-    default_images_sizes = [2483, 1073, 1233, 1381]
+    default_images_sizes = [2483, 1073, 1233, 1381, 1402]
     website_name = extract_website_name(url)
     image_url = 'http://img.tweetimag.es/i/'+website_name
     res = get_http_response(image_url)
@@ -491,8 +494,6 @@ def http_read(url):
 def normalize_img((width, height), data):
     import ImageFile
     import Image
-    import subprocess
-    import os
     p = ImageFile.Parser()
     p.feed(data)
     im=p.close()
@@ -535,10 +536,7 @@ def normalize_img((width, height), data):
 
 # capty
 
-import os
-import subprocess
-
-def screenshot(url):
+def tryit_screenshot(url):
     hash = hashlib.sha1(url).hexdigest()
     path = settings.SCREENSHOTS_FOLDER + hash + '.png'
 
@@ -548,6 +546,19 @@ def screenshot(url):
                 url,\
                 path])
         except subprocess.CalledProcessError:
-            return ''
-
-    return settings.MEDIA_URL+'screenshots/'+ hash + '.png'
+            return None
+        
+        return settings.MEDIA_URL+'screenshots/'+ hash + '.png'
+    
+def site_screenshot(url):
+    random_string = make_random_string(32)
+    path = settings.TMP_IMAGES_FOLDER + random_string + '.png'
+    try:
+        subprocess.check_call([settings.CAPTY,\
+            url,\
+            path])
+    except subprocess.CalledProcessError:
+        return None
+    data = open(path,'rd').read()
+    os.remove(path)
+    return data
