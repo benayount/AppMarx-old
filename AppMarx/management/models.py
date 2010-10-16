@@ -189,7 +189,7 @@ class Website_Website(models.Model):
     to_website = models.ForeignKey(Website, related_name='to',null=False,blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
-# Website_Website Model
+# Website_Image Model
 
 class Website_Image(models.Model):
     image = models.ImageField(upload_to='screenshots/%Y/%m/%d')

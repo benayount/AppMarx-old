@@ -23,10 +23,11 @@ from lib import remove_landing_url,  \
  remove_leading_http, http_read, normalize_img, tryit_screenshot, \
  site_screenshot
  
+import ImageFile
+            
 from django.core.files.base import ContentFile
 from helpers import make_random_string
-  
-#TODO: implement forget password, and send activation code again
+
 #TODO: implement search
 
 @public
@@ -191,9 +192,15 @@ def signup(request):
             
             # first site screenshot insertion
             screenshot_name = make_random_string(32)+'.png'
-            screenshot_image_content = ContentFile(normalize_img((400,300),site_screenshot(URL))) or ''
-            wi = Website_Image(name=name, website=website)
-            wi.image.save(screenshot_name, screenshot_image_content)
+            
+            screenshot_image_content = site_screenshot(URL)
+            if screenshot_image_content:
+                p = ImageFile.Parser()
+                p.feed(screenshot_image_content)
+                im=p.close()
+                screenshot_image_content = ContentFile(normalize_img((im.size[0]/2,im.size[1]/2),screenshot_image_content))
+                wi = Website_Image(name=name, website=website)
+                wi.image.save(screenshot_name, screenshot_image_content)
             # the actual user-website association creation
             User_Website(user=user,website=website).save()
             response = HttpResponse('Signup successful, please activate via email')
