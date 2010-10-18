@@ -2,3 +2,4 @@ urllib
 urllib2
 libxml2dom
 ImageMagick
+Sphinx, python-sphinx ( see http://pkarl.com/articles/guide-django-full-text-search-sphinx-and-django-sp/)

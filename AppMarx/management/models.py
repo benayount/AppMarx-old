@@ -1,15 +1,44 @@
 from django.db import models
-from helpers import make_random_string
+from helpers import make_random_string, in_list
 from defines import *
 from django.core.mail import EmailMessage
 import datetime
 
 import hashlib
 import sys
+from djangosphinx.models import SphinxSearch
 
+
+class Serializable():
+    def to_dict(self, options={}):
+        attributes = self.__dict__
+        exclusion_list = options.get("exclude", '')
+        inclusion_list = options.get("include", '')
+
+        # both exclude and include cant be present
+        if exclusion_list and inclusion_list:
+            return {}
+        elif not exclusion_list and not inclusion_list:
+            inclusion_list = attributes.keys()
+        
+        my_dict = {}
+        for (k,v) in attributes.items():
+            if k == "_state":
+                continue
+            
+            if inclusion_list:
+                if in_list(inclusion_list, k):
+                    my_dict[k] = str(v)
+                    
+            elif exclusion_list:
+                if not in_list(exclusion_list, k):
+                    my_dict[k] = str(v)
+                    
+        return my_dict
+    
 # User model
 
-class User(models.Model):
+class User(models.Model, Serializable):
     email = models.EmailField(unique=True)
     encrypted_password = models.CharField(max_length=40)
     fullname = models.CharField(max_length=64)
@@ -27,7 +56,7 @@ class User(models.Model):
         if not self.salt:
             self.salt = make_random_string(16)
         self.encrypted_password = hashlib.sha1(self.salt+password).hexdigest()
-        
+    
     def __unicode__(self):
             return self.email
         
@@ -61,7 +90,10 @@ class User_ForgetPassword(models.Model):
                       +".\n Click the link below to change your password:\n http://localhost:8000/management/change_password/"+\
                       self.token+"\n\nThanks,\nThe AppAarx team", APPMARX_ACCOUNTS_EMAIL,
                       to=[self.user.email])
-        forget_password_mail.send()
+        try:
+            forget_password_mail.send()
+        except:
+            pass
     
     def __unicode__(self):
         return self.token
@@ -102,20 +134,24 @@ class User_Activation(models.Model):
                       +".\n Please click the link below to activate your account:\n http://localhost:8000/management/activate/"+\
                       self.activation_code+"\n\nThanks,\nThe AppAarx team", APPMARX_ACCOUNTS_EMAIL,
                       to=[self.user.email])
-        activation_mail.send()
+        # if the server is offline(unlikely), fail silently
+        try:
+            activation_mail.send()
+        except:
+            pass
     
     def __unicode__(self):
         return self.activation_code
 
 # Website model
 
-class Website(models.Model):
+class Website(models.Model, Serializable):
     name = models.CharField(max_length=255)
     description = models.CharField(max_length=511,blank=True)
     favicon32 = models.ImageField(upload_to='favicons/%Y/%m/%d/')
     favicon48 = models.ImageField(upload_to='favicons/%Y/%m/%d/')
     favicon64 = models.ImageField(upload_to='favicons/%Y/%m/%d/')
-    URL = models.URLField(max_length=511)
+    url = models.URLField(max_length=511)
     type = models.IntegerField(default=1)
     api_key = models.CharField(max_length=60,blank=True,unique=True)
     is_verified = models.BooleanField(default=False)
@@ -147,8 +183,19 @@ class Website(models.Model):
         """
     
     def __unicode__(self):
-        return self.URL
+        return self.url
 
+    search = SphinxSearch(
+           index ='website_index website_autocomplete_index', 
+           weights = { # individual field weighting
+               'url': 100,
+               'name': 80,
+               'description': 70,
+           },
+           mode='SPH_MATCH_EXTENDED2',
+           rankmode='SPH_RANK_WORDCOUNT',
+       )
+    
 # Website_User model, Many users to Website for now
 
 class User_Website(models.Model):
@@ -197,5 +244,4 @@ class Website_Image(models.Model):
     website = models.ForeignKey(Website,null=False,blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    
     

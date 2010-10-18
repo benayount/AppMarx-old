@@ -56,10 +56,12 @@ def get_site_description(res):
     url = ('http://ajax.googleapis.com/ajax/services/search/web' \
            '?v=1.0&q=site:'+res.url)
     res = get_http_response(url)
+    if not res:
+        return ''
     results = simplejson.load(res)['responseData']['results']
     if results:
         return results[0]['content']
-    return 'No description available'
+    return ''
 
 def extract_website_name(url):
     url = remove_leading_http(url)
@@ -423,10 +425,11 @@ def render_form(template, form, error_message, request):
     )
     
 def get_http_response(url):
+    # make timeout actually work?...
     req = urllib2.Request(url)
     try:
-        res = urllib2.urlopen(req)
-    except (URLError, HTTPError):
+        res = urllib2.urlopen(req, timeout=1)
+    except:
         return None
     return res
      
@@ -465,9 +468,8 @@ def session_maintenance(request):
     request = autologin(request)
     return request
 
-# protected views decorator
-# will redirect to root if not logged in
-def protected(view):
+
+def protected_view(view):
     def wrapper(request, *args, **kwargs):
         request = session_maintenance(request)
         if not is_logged_in(request):
@@ -477,11 +479,19 @@ def protected(view):
 
 # public views decorator
 # will redirect to /management if logged in
-def public(view):
+def public_view(view):
     def wrapper(request, *args, **kwargs):
         request = session_maintenance(request)
         if is_logged_in(request):
             return HttpResponseRedirect('/management')
+        return view(request, *args, **kwargs)
+    return wrapper
+
+# open views decorator
+# will only maintain session (never forcing redirect)
+def open_view(view):
+    def wrapper(request, *args, **kwargs):
+        request = session_maintenance(request)
         return view(request, *args, **kwargs)
     return wrapper
 

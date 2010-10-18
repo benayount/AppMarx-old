@@ -19,18 +19,16 @@ from lib import remove_landing_url,  \
  get_http_response, get_site_description, \
  get_site_favicon_url, extract_website_name, \
  remember_user, forget_user, login_user, \
- render_form, is_logged_in, protected, public, logout_user, \
+ render_form, is_logged_in, logout_user, \
  remove_leading_http, http_read, normalize_img, tryit_screenshot, \
- site_screenshot
+ site_screenshot, public_view, protected_view, open_view
  
 import ImageFile
             
 from django.core.files.base import ContentFile
 from helpers import make_random_string
 
-#TODO: implement search
-
-@public
+@public_view
 def login(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
@@ -60,12 +58,12 @@ def login(request):
         form = LoginForm()
     return render_form('login_form.html', form, '', request)
 
-@protected
+@protected_view
 def logout(request):
     return \
      logout_user(response=HttpResponseRedirect('/'), request=request) 
 
-@public
+@public_view
 def forget_password(request):
     if request.method == 'POST':
         form = ForgetPasswordForm(request.POST)
@@ -100,7 +98,7 @@ def forget_password(request):
     # end testing
     raise Http404
 
-@public
+@public_view
 def change_password(request, token):
     try:
         ufp = User_ForgetPassword.objects.get(token=token)
@@ -145,7 +143,7 @@ def change_password(request, token):
         ,context_instance=RequestContext(request)
     )
 
-@public
+@public_view
 def signup(request):
     if request.method == 'POST': 
         form = SignupForm(request.POST)
@@ -153,7 +151,7 @@ def signup(request):
             email = form.cleaned_data['email']
             fullname = form.cleaned_data['fullname']
             password = form.cleaned_data['password']
-            URL = str(form.cleaned_data['URL']).lower()
+            url = str(form.cleaned_data['url']).lower()
             # creating the fresh user
             user = User(fullname=fullname, email=email, password=password, type=1)
             user.save()
@@ -161,39 +159,40 @@ def signup(request):
             User_Activation(user=user).save()
             
             description =''
-            res = get_http_response(URL)
-            
+            res = get_http_response(url)
             # saving website's description
             if res:
                 description=get_site_description(res)[0:510]
                 if len(description) >= 507:
                     description=description[0:507]+'...'
                     
-            name=extract_website_name(remove_landing_url(URL))
+            name=extract_website_name(remove_landing_url(url))
             
             # insert the url to websites table in an unverified state 
             # associated to the fresh user -- custom validator made sure that no
             # record with same url is verified yet
-            website = Website(URL=URL, name=name, description=description, type=1)
+            website = Website(url=url, name=name, description=description, type=1)
             website.save()
             
             # saving website's icon
-            favicon_url = get_site_favicon_url(remove_landing_url(URL)) or ''
+            favicon_url = get_site_favicon_url(remove_landing_url(url)) or ''
             if favicon_url:
                 favicon_content = http_read(favicon_url) or ''
                 if favicon_content:
-                    filename = make_random_string(32)
+                    filename32 = make_random_string(32)+'.png'
+                    filename48 = make_random_string(32)+'.png'
+                    filename64 = make_random_string(32)+'.png'
                     favicon32 = ContentFile(normalize_img((32,32),favicon_content))
                     favicon48 = ContentFile(normalize_img((48,48),favicon_content))
                     favicon64 = ContentFile(normalize_img((64,64),favicon_content))
-                    website.favicon32.save(filename+'-32'+'.png', favicon32)
-                    website.favicon48.save(filename+'-48'+'.png', favicon48)
-                    website.favicon64.save(filename+'-64'+'.png', favicon64)
+                    website.favicon32.save(filename32, favicon32)
+                    website.favicon48.save(filename48, favicon48)
+                    website.favicon64.save(filename64, favicon64)
             
             # first site screenshot insertion
             screenshot_name = make_random_string(32)+'.png'
             
-            screenshot_image_content = site_screenshot(URL)
+            screenshot_image_content = site_screenshot(url)
             if screenshot_image_content:
                 p = ImageFile.Parser()
                 p.feed(screenshot_image_content)
@@ -211,7 +210,7 @@ def signup(request):
         
     return render_form('signup_form.html', form, '', request)
 
-@public
+@public_view
 def activate(request, activation_code):
     try:
         ua = User_Activation.objects.get(activation_code=activation_code)
@@ -232,31 +231,31 @@ def activate(request, activation_code):
     login_user(session=request.session, user=user)
     return response
 
-@public
+@public_view
 def tryit(request):
     error_message = ''
     if request.method == 'POST':
         form = TryitForm(request.POST)
         if form.is_valid():
             # "normalize" the url
-            URL = str(form.cleaned_data['URL']).lower()
+            url = str(form.cleaned_data['url']).lower()
             # test for site existence
-            res = get_http_response(URL)
+            res = get_http_response(url)
             if not res:
                 error_message += "We can not connect '" \
-                 + URL +"', Please make sure you didnt have any typos in the url field"
+                 + url +"', Please make sure you didnt have any typos in the url field"
             # site exists
             else:
                 
                 # site description
                 website_info = {}
-                website_info['URL'] = URL
+                website_info['url'] = url
                 
                 # for favicon
-                nolanding_url = remove_landing_url(URL)
+                nolanding_url = remove_landing_url(url)
                 
                 # clean url for compete
-                website_info['compete_URL'] = remove_leading_http(nolanding_url)
+                website_info['compete_url'] = remove_leading_http(nolanding_url)
                
                 # website's name
                 website_info['name'] = extract_website_name(nolanding_url)
@@ -265,10 +264,10 @@ def tryit(request):
                 website_info['description'] = get_site_description(res)
                 
                 # get the website's icon
-                website_info['favicon_URL'] = get_site_favicon_url(nolanding_url)
+                website_info['favicon_url'] = get_site_favicon_url(nolanding_url)
                 
                 # for screenshot
-                website_info['screenshot_URL'] = tryit_screenshot(URL) or ''
+                website_info['screenshot_url'] = tryit_screenshot(url) or ''
                 
                 return render_to_response('website_info.html',
                     website_info,
@@ -280,7 +279,7 @@ def tryit(request):
         
     return render_form('tryit_form.html', form, error_message, request)
 
-@protected
+@protected_view
 def recommend(request, from_id, to_id):
         user_id = request.session['user_id']
         # really a server error..
@@ -300,3 +299,27 @@ def recommend(request, from_id, to_id):
             raise Http404
         Website_Website(from_website=from_website, to_website=to_website).save()
         return HttpResponse('True')
+
+@open_view
+def search(request, query):
+    # TODO: give results of only verified websites
+    queryset = Website.search.query(query).exclude(is_verified=False)
+    
+    results_list = []
+    for result in list(queryset):
+        results_list.append(result.to_dict(options={
+            'exclude': 
+                [
+                    'id',
+                    'modified_at',
+                    'api_key',
+                    'is_verified',
+                    'verified_at',
+                ]
+            }
+        ))
+    return render_to_response('search_results.html'
+        , {'results': results_list, 'meta': queryset._sphinx}
+        , context_instance=RequestContext(request)
+    )
+    

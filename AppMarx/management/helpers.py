@@ -15,3 +15,10 @@ def safe_dict_get(dict, key):
     except KeyError:
         return None
     return value
+
+def in_list(list, value):
+    try:
+        i = list.index(value)
+    except ValueError:
+        return None
+    return i+1

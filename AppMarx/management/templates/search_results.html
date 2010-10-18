@@ -1,0 +1,11 @@
+{% extends "base_html.html" %}
+
+{% block content %}
+
+{% for result in results %}
+	<img src="/media/{{ result.favicon32 }}">
+	url: {{ result.url }} <br>
+	Name: {{ result.name }} <br>
+	Description: {{ result.description }} <br> <br>
+{% endfor %}
+{% endblock content %}

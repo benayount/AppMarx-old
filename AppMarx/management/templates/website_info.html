@@ -5,16 +5,16 @@
 
 {% block content %}
     
-	<a href='http://siteanalytics.compete.com/{{ compete_URL }}/?metric=uv'>
-		<img src='http://grapher.compete.com/{{ compete_URL }}_uv_310.png' style="border:0px"/>
+	<a href='http://siteanalytics.compete.com/{{ compete_url }}/?metric=uv'>
+		<img src='http://grapher.compete.com/{{ compete_url }}_uv_310.png' style="border:0px"/>
 	</a>
 	<br />
 	Name: {{ name|striptags }} <br />
 	Description: {{ description|striptags }} <br />
-	URL: {{ URL }} 
+	url: {{ url }} 
 	<br />
-	<img src='{{ favicon_URL }}' />
+	<img src='{{ favicon_url }}' />
 	<br />
 	<br />
-	<img style="width:304px;height:195px" src='{{ screenshot_URL }}' />
+	<img style="width:304px;height:195px" src='{{ screenshot_url }}' />
 {% endblock content %}

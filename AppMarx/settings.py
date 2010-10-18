@@ -20,6 +20,8 @@ DATABASES = {
     }
 }
 
+DATABASE_ENGINE = 'mysql'
+
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'sadambe666@gmail.com'
@@ -104,6 +106,8 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.admin',
+    'django.contrib.humanize',
+    'djangosphinx',
     'AppMarx.management',
 )
 
@@ -115,3 +119,6 @@ CAPTY = '/home/adam/Aptana Studio Workspace/AppMarx/management/capty.py'
 SCREENSHOTS_FOLDER  = MEDIA_ROOT+'screenshots/'
 TMP_IMAGES_FOLDER = MEDIA_ROOT+'tmp/'
 IMAGES_LIB_FOLDER = MEDIA_ROOT+'lib/'
+
+# Sphinx 0.9.9
+SPHINX_API_VERSION = 0x116
